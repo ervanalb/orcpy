@@ -32,6 +32,11 @@ class OrcBoard:
 		resp=self.do_command(0x1000,data)
 		# todo parse response
 
+	# width in usec
+	def set_pwm(self,port,width):
+		data=struct.pack('>BBI',port,3,width)
+		resp=self.do_command(0x7000,data)
+
 	def get_status(self):
 		resp=self.do_command(0x0001)
 		if len(resp) != 205:
@@ -88,13 +93,25 @@ class OrcBoard:
 			raise Exception("Received response out of order")
 		return result
 
+	def communicate(self,motors):
+		for i in range(0,3):
+			if i>=len(motors) or motors[i] is None:
+				self.set_motor_coast(0)
+			else:
+				self.set_motor(0,motors[i])
+		return self.get_status()
+
 if __name__=='__main__':
 	import time
 	o=OrcBoard()
 	print "VERSION ",o.get_version()
 	while True:
-		o.set_motor(0,100) # Left wheel forward
-		o.set_motor(1,-100) # Right wheel forward
+		#o.set_motor(0,100) # Left wheel forward
+		#o.set_motor(1,-100) # Right wheel forward
+		o.set_pwm(0,10)
+		o.set_pwm(1,100)
+		o.set_pwm(2,1000)
+		o.set_pwm(3,10000)
 		status=o.get_status()
 		print status['encoders'][0]
 		print status['encoders'][1]
